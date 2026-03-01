@@ -5,58 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Convertidor y Compresor de PDF Gratis</title>
   
-  <!-- jsPDF para convertir imágenes a PDF -->
+  <!-- jsPDF para imágenes → PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- pdf-lib para comprimir PDF -->
+  <!-- pdf-lib para compresión -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      text-align: center; 
-      padding: 50px; 
-      background: #f4f4f4; 
-      margin: 0; 
-    }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f4; margin: 0; }
     h1 { color: #2c3e50; }
-    .container { 
-      max-width: 700px; 
-      margin: 0 auto; 
-      background: white; 
-      padding: 40px; 
-      border-radius: 12px; 
-      box-shadow: 0 0 25px rgba(0,0,0,0.15); 
-    }
-    input, select, button { 
-      padding: 14px; 
-      margin: 12px; 
-      font-size: 17px; 
-      border-radius: 6px; 
-      border: 1px solid #ccc; 
-      width: 80%; 
-      max-width: 500px; 
-      box-sizing: border-box; 
-    }
-    button { 
-      background: #e74c3c; 
-      color: white; 
-      border: none; 
-      cursor: pointer; 
-      font-weight: bold; 
-    }
+    .container { max-width: 700px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+    input, select, button { padding: 14px; margin: 12px; font-size: 17px; border-radius: 6px; border: 1px solid #ccc; width: 80%; max-width: 500px; box-sizing: border-box; }
+    button { background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; }
     button:hover { background: #c0392b; }
     #result { margin-top: 30px; font-size: 18px; color: #27ae60; }
     #loading { display: none; margin-top: 20px; font-size: 20px; color: #3498db; }
-    .ad-space { 
-      margin: 40px auto; 
-      height: 100px; 
-      background: #eee; 
-      border: 1px dashed #aaa; 
-      line-height: 100px; 
-      font-size: 18px; 
-      color: #777; 
-      max-width: 728px; 
-    }
+    .ad-space { margin: 40px auto; height: 100px; background: #eee; border: 1px dashed #aaa; line-height: 100px; font-size: 18px; color: #777; max-width: 728px; }
   </style>
 </head>
 <body>
@@ -97,7 +60,6 @@
 
       if (format === 'pdf') {
         if (file.type.startsWith('image/')) {
-          // Imagen → PDF con jsPDF
           const reader = new FileReader();
           reader.onload = function(e) {
             const img = new Image();
@@ -119,14 +81,39 @@
           alert("Solo imágenes por ahora para conversión a PDF.");
           document.getElementById('loading').style.display = 'none';
         }
-      } else if (format === 'compress') {
+      } 
+      // Compresor de PDF mejorado
+      else if (format === 'compress') {
         if (file.type === 'application/pdf') {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-            // Compresión básica: elimina metadatos y optimiza streams
-            const compressedPdfBytes = await pdfDoc.save({ useObjectStreams: true });
+            // Paso 1: eliminar metadatos
+            pdfDoc.setTitle('');
+            pdfDoc.setAuthor('');
+            pdfDoc.setSubject('');
+            pdfDoc.setKeywords('');
+            pdfDoc.setProducer('');
+            pdfDoc.setCreator('');
+
+            // Paso 2: optimizar todas las páginas
+            const pages = pdfDoc.getPages();
+            for (const page of pages) {
+              // Eliminar anotaciones y objetos innecesarios (si existen)
+              page.node.delete('Annots');
+            }
+
+            // Paso 3: guardar con máxima compresión
+            const compressedPdfBytes = await pdfDoc.save({
+              useObjectStreams: true,
+              addDefaultPage: false,
+              objectsPerBlock: 1000, // más objetos por bloque = mejor compresión
+              updateFieldAppearances: false
+            });
+
+            const originalSize = (arrayBuffer.byteLength / 1024).toFixed(2) + ' KB';
+            const newSize = (compressedPdfBytes.length / 1024).toFixed(2) + ' KB';
 
             const blob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
@@ -137,7 +124,7 @@
             URL.revokeObjectURL(url);
 
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('result').innerHTML = '¡PDF comprimido descargado!';
+            document.getElementById('result').innerHTML = `¡Comprimido! Original: ${originalSize} → Nuevo: ${newSize}`;
           } catch (err) {
             alert("Error al comprimir PDF: " + err.message);
             document.getElementById('loading').style.display = 'none';
