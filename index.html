@@ -4,45 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Convertidor y Compresor de PDF Gratis</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f4; margin: 0; }
     h1 { color: #2c3e50; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-    input, button { padding: 12px; margin: 10px; font-size: 16px; }
-    button { background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #2980b9; }
+    .container { max-width: 700px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+    input, select, button { padding: 14px; margin: 12px; font-size: 17px; border-radius: 6px; border: 1px solid #ccc; width: 80%; max-width: 500px; box-sizing: border-box; }
+    button { background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; }
+    button:hover { background: #c0392b; }
     #result { margin-top: 30px; font-size: 18px; color: #27ae60; }
+    #loading { display: none; margin-top: 20px; font-size: 20px; color: #3498db; }
+    .ad-space { margin: 40px auto; height: 100px; background: #eee; border: 1px dashed #aaa; line-height: 100px; font-size: 18px; color: #777; max-width: 728px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Convertidor y Compresor de PDF</h1>
-    <p>Sube tu archivo y conviértelo o comprímelo gratis</p>
+    <p>Sube tu archivo (imagen o Word) y conviértelo a PDF gratis</p>
 
-    <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.png,.jpeg">
+    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.doc,.docx">
+    <br>
+    <select id="format">
+      <option value="pdf">Convertir a PDF</option>
+      <option value="compress">Comprimir PDF (próximamente)</option>
+    </select>
     <br>
     <button onclick="procesar()">Procesar archivo</button>
 
+    <div id="loading">Procesando... por favor espera</div>
     <div id="result"></div>
 
-    <!-- Aquí irá tu ad banner después -->
-    <div style="margin-top:40px; height:90px; background:#eee;">[Espacio para AdSense o pop-up]</div>
+    <!-- Espacio para pop-up / interstitial antes de descarga -->
+    <div class="ad-space">[Aquí irá pop-up o interstitial antes de descargar]</div>
   </div>
 
   <script>
-    function procesar() {
-      const file = document.getElementById('fileInput').files[0];
+    const { jsPDF } = window.jspdf;
+
+    async function procesar() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
       if (!file) {
         alert("Selecciona un archivo primero");
         return;
       }
 
-      document.getElementById('result').innerHTML = "Procesando...";
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('result').innerHTML = '';
 
-      // Aquí irá la lógica real de conversión/compresión
-      setTimeout(() => {
-        document.getElementById('result').innerHTML = "¡Listo! Descarga tu PDF <a href='#'>aquí</a>";
-      }, 2000);
+      const format = document.getElementById('format').value;
+
+      if (format === 'pdf') {
+        // Conversión a PDF con jsPDF (para imágenes)
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+              const pdf = new jsPDF({
+                orientation: img.width > img.height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [img.width, img.height]
+              });
+              pdf.addImage(e.target.result, file.type.split('/')[1].toUpperCase(), 0, 0, img.width, img.height);
+              pdf.save('convertido.pdf');
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('result').innerHTML = '¡Descargado! Revisa tu carpeta de descargas.';
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert("Por ahora solo soporto imágenes. Word a PDF próximamente.");
+          document.getElementById('loading').style.display = 'none';
+        }
+      } else {
+        alert("Compresor de PDF próximamente (usando API gratuita).");
+        document.getElementById('loading').style.display = 'none';
+      }
     }
   </script>
 </body>
