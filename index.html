@@ -62,9 +62,9 @@
 <body>
   <div class="container">
     <h1>Convertidor y Compresor de PDF</h1>
-    <p>Sube tu archivo (imagen o Word) y conviértelo a PDF gratis</p>
+    <p>Sube tu archivo y conviértelo o comprímelo gratis</p>
 
-    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.doc,.docx,.pdf">
+    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.pdf">
     <br>
     <select id="format">
       <option value="pdf">Convertir a PDF</option>
@@ -96,8 +96,8 @@
       const format = document.getElementById('format').value;
 
       if (format === 'pdf') {
-        // Imagen → PDF
         if (file.type.startsWith('image/')) {
+          // Imagen → PDF con jsPDF
           const reader = new FileReader();
           reader.onload = function(e) {
             const img = new Image();
@@ -116,18 +116,16 @@
           };
           reader.readAsDataURL(file);
         } else {
-          alert("Solo imágenes por ahora para conversión a PDF. Compresor funciona con PDFs.");
+          alert("Solo imágenes por ahora para conversión a PDF.");
           document.getElementById('loading').style.display = 'none';
         }
-      } 
-      // Compresor de PDF (solo si es PDF)
-      else if (format === 'compress') {
+      } else if (format === 'compress') {
         if (file.type === 'application/pdf') {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-            // Compresión básica: elimina metadatos y objetos innecesarios
+            // Compresión básica: elimina metadatos y optimiza streams
             const compressedPdfBytes = await pdfDoc.save({ useObjectStreams: true });
 
             const blob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
