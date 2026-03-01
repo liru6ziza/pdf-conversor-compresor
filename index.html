@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Convertidor y Compresor de PDF Gratis</title>
   
-  <!-- jsPDF para imágenes -->
+  <!-- jsPDF para convertir imágenes a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- pdf-lib para compresión -->
+  <!-- pdf-lib para comprimir PDF -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
   <style>
@@ -64,7 +64,7 @@
     <h1>Convertidor y Compresor de PDF</h1>
     <p>Sube tu archivo (imagen o Word) y conviértelo a PDF gratis</p>
 
-    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.doc,.docx">
+    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.doc,.docx,.pdf">
     <br>
     <select id="format">
       <option value="pdf">Convertir a PDF</option>
@@ -81,9 +81,6 @@
 
   <script>
     const { jsPDF } = window.jspdf;
-
-    // === CAMBIA ESTA LÍNEA POR TU CLAVE REAL DE CLOUDCONVERT ===
-    const CLOUDCONVERT_API_KEY = 'PEGA_TU_CLAVE_COMPLETA_AQUI';
 
     async function procesar() {
       const fileInput = document.getElementById('fileInput');
@@ -118,71 +115,19 @@
             img.src = e.target.result;
           };
           reader.readAsDataURL(file);
-        } 
-        // Word → PDF con CloudConvert
-        else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const uploadRes = await fetch('https://api.cloudconvert.com/v2/import/upload', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}` },
-              body: formData
-            });
-            if (!uploadRes.ok) throw new Error(`Error al subir: ${uploadRes.status}`);
-            const uploadData = await uploadRes.json();
-            const taskId = uploadData.data.id;
-
-            const jobRes = await fetch('https://api.cloudconvert.com/v2/jobs', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                tasks: {
-                  'import-1': { operation: 'import/upload', file_id: taskId },
-                  'convert-1': { operation: 'convert', input: 'import-1', output_format: 'pdf' },
-                  'export-1': { operation: 'export/url', input: 'convert-1' }
-                }
-              })
-            });
-            if (!jobRes.ok) throw new Error(`Error al crear job: ${jobRes.status}`);
-            const jobData = await jobRes.json();
-            const jobId = jobData.data.id;
-
-            let status = 'waiting';
-            let exportUrl = '';
-            while (status !== 'finished') {
-              await new Promise(r => setTimeout(r, 3000));
-              const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
-                headers: { 'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}` }
-              });
-              if (!statusRes.ok) throw new Error(`Error al consultar estado: ${statusRes.status}`);
-              const statusData = await statusRes.json();
-              status = statusData.data.status;
-              if (status === 'finished') {
-                exportUrl = statusData.data.tasks.find(t => t.name === 'export-1').result.files[0].url;
-              }
-            }
-
-            window.location.href = exportUrl;
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('result').innerHTML = '¡Descargado!';
-          } catch (err) {
-            alert("Error en la conversión: " + err.message);
-            document.getElementById('loading').style.display = 'none';
-          }
         } else {
-          alert("Solo imágenes y archivos Word por ahora.");
+          alert("Solo imágenes por ahora para conversión a PDF. Compresor funciona con PDFs.");
           document.getElementById('loading').style.display = 'none';
         }
-      } else if (format === 'compress') {
+      } 
+      // Compresor de PDF (solo si es PDF)
+      else if (format === 'compress') {
         if (file.type === 'application/pdf') {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+
+            // Compresión básica: elimina metadatos y objetos innecesarios
             const compressedPdfBytes = await pdfDoc.save({ useObjectStreams: true });
 
             const blob = new Blob([compressedPdfBytes], { type: 'application/pdf' });
@@ -196,11 +141,11 @@
             document.getElementById('loading').style.display = 'none';
             document.getElementById('result').innerHTML = '¡PDF comprimido descargado!';
           } catch (err) {
-            alert("Error al comprimir: " + err.message);
+            alert("Error al comprimir PDF: " + err.message);
             document.getElementById('loading').style.display = 'none';
           }
         } else {
-          alert("Sube un archivo PDF para comprimir.");
+          alert("Sube un archivo PDF para comprimirlo.");
           document.getElementById('loading').style.display = 'none';
         }
       }
