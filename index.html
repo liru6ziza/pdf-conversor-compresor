@@ -11,15 +11,52 @@
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f4; margin: 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      padding: 50px; 
+      background: #f4f4f4; 
+      margin: 0; 
+    }
     h1 { color: #2c3e50; }
-    .container { max-width: 700px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
-    input, select, button { padding: 14px; margin: 12px; font-size: 17px; border-radius: 6px; border: 1px solid #ccc; width: 80%; max-width: 500px; box-sizing: border-box; }
-    button { background: #e74c3c; color: white; border: none; cursor: pointer; font-weight: bold; }
+    .container { 
+      max-width: 700px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 40px; 
+      border-radius: 12px; 
+      box-shadow: 0 0 25px rgba(0,0,0,0.15); 
+    }
+    input, select, button { 
+      padding: 14px; 
+      margin: 12px; 
+      font-size: 17px; 
+      border-radius: 6px; 
+      border: 1px solid #ccc; 
+      width: 80%; 
+      max-width: 500px; 
+      box-sizing: border-box; 
+    }
+    button { 
+      background: #e74c3c; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold; 
+    }
     button:hover { background: #c0392b; }
     #result { margin-top: 30px; font-size: 18px; color: #27ae60; }
     #loading { display: none; margin-top: 20px; font-size: 20px; color: #3498db; }
-    .ad-space { margin: 40px auto; height: 100px; background: #eee; border: 1px dashed #aaa; line-height: 100px; font-size: 18px; color: #777; max-width: 728px; }
+    .ad-space { 
+      margin: 40px auto; 
+      height: 100px; 
+      background: #eee; 
+      border: 1px dashed #aaa; 
+      line-height: 100px; 
+      font-size: 18px; 
+      color: #777; 
+      max-width: 728px; 
+    }
   </style>
 </head>
 <body>
@@ -45,7 +82,7 @@
   <script>
     const { jsPDF } = window.jspdf;
 
-    // === PEGA AQUÍ TU API KEY DE CLOUDCONVERT ===
+    // === CAMBIA ESTA LÍNEA POR TU CLAVE REAL DE CLOUDCONVERT ===
     const CLOUDCONVERT_API_KEY = 'PEGA_TU_CLAVE_COMPLETA_AQUI';
 
     async function procesar() {
@@ -62,7 +99,7 @@
       const format = document.getElementById('format').value;
 
       if (format === 'pdf') {
-        // === Imagen → PDF ===
+        // Imagen → PDF
         if (file.type.startsWith('image/')) {
           const reader = new FileReader();
           reader.onload = function(e) {
@@ -82,7 +119,7 @@
           };
           reader.readAsDataURL(file);
         } 
-        // === Word → PDF con CloudConvert ===
+        // Word → PDF con CloudConvert
         else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
           try {
             const formData = new FormData();
@@ -93,6 +130,7 @@
               headers: { 'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}` },
               body: formData
             });
+            if (!uploadRes.ok) throw new Error(`Error al subir: ${uploadRes.status}`);
             const uploadData = await uploadRes.json();
             const taskId = uploadData.data.id;
 
@@ -110,6 +148,7 @@
                 }
               })
             });
+            if (!jobRes.ok) throw new Error(`Error al crear job: ${jobRes.status}`);
             const jobData = await jobRes.json();
             const jobId = jobData.data.id;
 
@@ -120,6 +159,7 @@
               const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobId}`, {
                 headers: { 'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}` }
               });
+              if (!statusRes.ok) throw new Error(`Error al consultar estado: ${statusRes.status}`);
               const statusData = await statusRes.json();
               status = statusData.data.status;
               if (status === 'finished') {
@@ -138,9 +178,7 @@
           alert("Solo imágenes y archivos Word por ahora.");
           document.getElementById('loading').style.display = 'none';
         }
-      } 
-      // === Compresor de PDF ===
-      else if (format === 'compress') {
+      } else if (format === 'compress') {
         if (file.type === 'application/pdf') {
           try {
             const arrayBuffer = await file.arrayBuffer();
