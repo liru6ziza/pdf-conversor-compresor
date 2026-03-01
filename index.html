@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertidor y Compresor de PDF Gratis</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+    h1 { color: #2c3e50; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    input, button { padding: 12px; margin: 10px; font-size: 16px; }
+    button { background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    #result { margin-top: 30px; font-size: 18px; color: #27ae60; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Convertidor y Compresor de PDF</h1>
+    <p>Sube tu archivo y conviértelo o comprímelo gratis</p>
+
+    <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.jpg,.png,.jpeg">
+    <br>
+    <button onclick="procesar()">Procesar archivo</button>
+
+    <div id="result"></div>
+
+    <!-- Aquí irá tu ad banner después -->
+    <div style="margin-top:40px; height:90px; background:#eee;">[Espacio para AdSense o pop-up]</div>
+  </div>
+
+  <script>
+    function procesar() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) {
+        alert("Selecciona un archivo primero");
+        return;
+      }
+
+      document.getElementById('result').innerHTML = "Procesando...";
+
+      // Aquí irá la lógica real de conversión/compresión
+      setTimeout(() => {
+        document.getElementById('result').innerHTML = "¡Listo! Descarga tu PDF <a href='#'>aquí</a>";
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
